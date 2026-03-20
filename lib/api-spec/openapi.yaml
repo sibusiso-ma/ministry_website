@@ -1,0 +1,660 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Christian Ministry Website API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: posts
+    description: Blog post operations
+  - name: videos
+    description: Video operations
+  - name: comments
+    description: Comment operations
+  - name: contact
+    description: Contact form operations
+  - name: livestream
+    description: Livestream operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/user:
+    get:
+      operationId: getCurrentAuthUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user or unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCurrentAuthUserResponse"
+
+  /posts:
+    get:
+      operationId: listPosts
+      tags: [posts]
+      summary: List all published blog posts
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: number
+        - name: limit
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostListResponse"
+    post:
+      operationId: createPost
+      tags: [posts]
+      summary: Create a new blog post (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePostBody"
+      responses:
+        "201":
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "401":
+          description: Unauthorized
+
+  /posts/{id}:
+    get:
+      operationId: getPost
+      tags: [posts]
+      summary: Get a single blog post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "404":
+          description: Not found
+    put:
+      operationId: updatePost
+      tags: [posts]
+      summary: Update a blog post (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePostBody"
+      responses:
+        "200":
+          description: Updated post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "401":
+          description: Unauthorized
+    delete:
+      operationId: deletePost
+      tags: [posts]
+      summary: Delete a blog post (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Unauthorized
+
+  /videos:
+    get:
+      operationId: listVideos
+      tags: [videos]
+      summary: List all videos
+      responses:
+        "200":
+          description: List of videos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VideoListResponse"
+    post:
+      operationId: createVideo
+      tags: [videos]
+      summary: Create a new video entry (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVideoBody"
+      responses:
+        "201":
+          description: Video created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+        "401":
+          description: Unauthorized
+
+  /videos/{id}:
+    delete:
+      operationId: deleteVideo
+      tags: [videos]
+      summary: Delete a video (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Unauthorized
+
+  /comments:
+    get:
+      operationId: listComments
+      tags: [comments]
+      summary: List comments for a post
+      parameters:
+        - name: postId
+          in: query
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentListResponse"
+    post:
+      operationId: createComment
+      tags: [comments]
+      summary: Add a comment to a post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentBody"
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  /comments/{id}:
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      summary: Delete a comment (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Unauthorized
+
+  /contact:
+    post:
+      operationId: submitContact
+      tags: [contact]
+      summary: Submit a contact form message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactFormBody"
+      responses:
+        "201":
+          description: Message submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactMessage"
+    get:
+      operationId: listContactMessages
+      tags: [contact]
+      summary: List all contact messages (admin only)
+      responses:
+        "200":
+          description: Contact messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactMessageListResponse"
+        "401":
+          description: Unauthorized
+
+  /livestream:
+    get:
+      operationId: getLivestream
+      tags: [livestream]
+      summary: Get current livestream config
+      responses:
+        "200":
+          description: Livestream config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Livestream"
+    put:
+      operationId: updateLivestream
+      tags: [livestream]
+      summary: Update livestream config (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLivestreamBody"
+      responses:
+        "200":
+          description: Updated livestream config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Livestream"
+        "401":
+          description: Unauthorized
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    GetCurrentAuthUserResponse:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/AuthUser"
+      required:
+        - authenticated
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        profileImage:
+          type: string
+      required:
+        - id
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: number
+        title:
+          type: string
+        slug:
+          type: string
+        excerpt:
+          type: string
+        content:
+          type: string
+        published:
+          type: boolean
+        authorId:
+          type: string
+        authorName:
+          type: string
+        imageUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - slug
+        - content
+        - published
+        - authorId
+        - createdAt
+        - updatedAt
+
+    PostListResponse:
+      type: object
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Post"
+        total:
+          type: number
+      required:
+        - posts
+        - total
+
+    CreatePostBody:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        excerpt:
+          type: string
+        imageUrl:
+          type: string
+        published:
+          type: boolean
+      required:
+        - title
+        - content
+
+    UpdatePostBody:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        excerpt:
+          type: string
+        imageUrl:
+          type: string
+        published:
+          type: boolean
+
+    Video:
+      type: object
+      properties:
+        id:
+          type: number
+        title:
+          type: string
+        description:
+          type: string
+        youtubeUrl:
+          type: string
+        thumbnailUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - youtubeUrl
+        - createdAt
+
+    VideoListResponse:
+      type: object
+      properties:
+        videos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Video"
+      required:
+        - videos
+
+    CreateVideoBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        youtubeUrl:
+          type: string
+        thumbnailUrl:
+          type: string
+      required:
+        - title
+        - youtubeUrl
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: number
+        postId:
+          type: number
+        authorName:
+          type: string
+        authorEmail:
+          type: string
+        content:
+          type: string
+        approved:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - postId
+        - authorName
+        - content
+        - approved
+        - createdAt
+
+    CommentListResponse:
+      type: object
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+      required:
+        - comments
+
+    CreateCommentBody:
+      type: object
+      properties:
+        postId:
+          type: number
+        authorName:
+          type: string
+        authorEmail:
+          type: string
+        content:
+          type: string
+      required:
+        - postId
+        - authorName
+        - content
+
+    ContactMessage:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        subject:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - message
+        - createdAt
+
+    ContactMessageListResponse:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactMessage"
+      required:
+        - messages
+
+    ContactFormBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        subject:
+          type: string
+        message:
+          type: string
+      required:
+        - name
+        - email
+        - message
+
+    Livestream:
+      type: object
+      properties:
+        id:
+          type: number
+        isLive:
+          type: boolean
+        youtubeStreamUrl:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+        title:
+          type: string
+        description:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - isLive
+        - updatedAt
+
+    UpdateLivestreamBody:
+      type: object
+      properties:
+        isLive:
+          type: boolean
+        youtubeStreamUrl:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+        title:
+          type: string
+        description:
+          type: string
+
+    ExchangeMobileAuthorizationCodeBody:
+      type: object
+      properties:
+        code:
+          type: string
+        code_verifier:
+          type: string
+        redirect_uri:
+          type: string
+        state:
+          type: string
+        nonce:
+          type: string
+      required:
+        - code
+        - code_verifier
+        - redirect_uri
+        - state
+
+    ExchangeMobileAuthorizationCodeResponse:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    LogoutMobileSessionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
